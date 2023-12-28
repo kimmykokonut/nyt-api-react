@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from "react";
-//info from NYT Top stories API
+import React, { useEffect, useReducer } from "react";
+import topStoriesReducer from "../reducers/top-stories-reducer"; 
+//import action creators
+import { getTopStoriesFailure, getTopStoriesSuccess } from "../actions/index";
+import userEvent from "@testing-library/user-event";
+
+//create initial state for userReducer hook
+const initialState = {
+  isLoaded: false,
+  topStories: [],
+  error: null
+};
+
 const TopStories = () => {
-  const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [topStories, setTopStories] = useState([]);
+  //usereducer is now managing the old useState stuff...
+  // const [error, setError] = useState(null);
+  // const [isLoaded, setIsLoaded] = useState(false);
+  // const [topStories, setTopStories] = useState([]);
+  //initialize useReducer hook
+  const [state, dispatch] = useReducer(topStoriesReducer, initialState);
 
   useEffect(() => {
     fetch(`https://api.nytimes.com/svc/topstories/v2/home.json?api-key=${process.env.REACT_APP_API_KEY}`)
@@ -15,14 +29,22 @@ const TopStories = () => {
       }
     })
     .then((jsonifiedResponse) => {
-      setTopStories(jsonifiedResponse.results)
-      setIsLoaded(true)
+      // setTopStories(jsonifiedResponse.results)
+      // setIsLoaded(true)
+      // create action then dispatch it:
+      const action = getTopStoriesSuccess(jsonifiedResponse.results)
+      dispatch(action);
     })
     .catch((error) => {
-      setError(error.message)
-      setIsLoaded(true)
+      // setError(error.message)
+      // setIsLoaded(true)
+      //create action and dispatch:
+      const action = getTopStoriesFailure(error.message)
+      dispatch(action);
     });
   }, []) //bc empty array depend. hook will run 1x.
+  //destructure from state var:
+  const { error, isLoaded, topStories } = state;
 
   if (error) {
     return <h1>Error: {error}</h1>;
